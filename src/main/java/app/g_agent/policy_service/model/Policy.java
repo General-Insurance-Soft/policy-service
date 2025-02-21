@@ -161,4 +161,12 @@ public class Policy {
     public void setPolicyNumber(String policyNumber) {
         this.policyNumber = policyNumber;
     }
+
+    public String getCertificateNumber() {
+        return certificateNumber;
+    }
+
+    public void setCertificateNumber(String certificateNumber) {
+        this.certificateNumber = certificateNumber;
+    }
 }

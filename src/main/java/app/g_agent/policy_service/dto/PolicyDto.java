@@ -7,11 +7,20 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class PolicyDto {
 
     private Long id;
+
+    @NotBlank(message = "policy_number is required")
+    @JsonProperty("policy_number")
+    String policyNumber;
+
+    @NotBlank(message = "certificate_number is required")
+    @JsonProperty("certificate_number")
+    String certificateNumber;
 
     @NotNull(message = "insurance_company_id is required")
     @JsonProperty("insurance_company_id")
@@ -137,5 +146,21 @@ public class PolicyDto {
 
     public void setPolicyDocuments(Set<PolicyDocumentDto> policyDocuments) {
         this.policyDocuments = policyDocuments;
+    }
+
+    public String getPolicyNumber() {
+        return policyNumber;
+    }
+
+    public void setPolicyNumber(String policyNumber) {
+        this.policyNumber = policyNumber;
+    }
+
+    public String getCertificateNumber() {
+        return certificateNumber;
+    }
+
+    public void setCertificateNumber(String certificateNumber) {
+        this.certificateNumber = certificateNumber;
     }
 }
