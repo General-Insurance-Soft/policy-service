@@ -1,5 +1,6 @@
 package app.g_agent.policy_service.service;
 
+import java.security.SignatureException;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -13,7 +14,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,8 +60,6 @@ public class JwtService {
 			throw new TokenExpiredException("Token has expired");
 		} catch (MalformedJwtException e) {
 			throw new MalformedTokenException("Malformed token");
-		} catch (SignatureException e) {
-			throw new InvalidTokenSignatureException("Invalid token signature");
 		} catch (Exception e) {
 			throw new InvalidTokenException("Invalid token");
 		}
