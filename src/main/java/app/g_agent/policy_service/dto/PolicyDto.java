@@ -22,6 +22,10 @@ public class PolicyDto {
     @JsonProperty("certificate_number")
     String certificateNumber;
 
+    @NotBlank(message = "proposal_number is required")
+    @JsonProperty("proposal_number")
+    String proposalNumber;
+
     @NotNull(message = "insurance_company_id is required")
     @JsonProperty("insurance_company_id")
     private Long insuranceCompanyId;
@@ -162,5 +166,13 @@ public class PolicyDto {
 
     public void setCertificateNumber(String certificateNumber) {
         this.certificateNumber = certificateNumber;
+    }
+
+    public String getProposalNumber() {
+        return proposalNumber;
+    }
+
+    public void setProposalNumber(String proposalNumber) {
+        this.proposalNumber = proposalNumber;
     }
 }
