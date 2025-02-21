@@ -36,15 +36,6 @@ public class PolicyService {
         this.jwtService = jwtService;
     }
 
-    public Policy getPolicyById(Long id) throws Exception {
-        Optional<Policy> policy = policyRepository.findById(id);
-        if (policy.isPresent()) {
-            return policy.get();
-        } else {
-            throw new Exception("The Policy does not exist");
-        }
-    }
-
     @Transactional
     public void deletePolicy(HttpServletRequest request, Long id) throws Exception {
         Optional<Policy> policyOpt = policyRepository.findById(id);
@@ -56,13 +47,15 @@ public class PolicyService {
         }
     }
 
-    public PolicyDto getPolicy(HttpServletRequest request, Long id) throws Exception {
+    public PolicyDto getPolicyById(HttpServletRequest request, Long id) throws Exception {
         Optional<Policy> policyOpt = policyRepository.findById(id);
 
         if (policyOpt.isPresent()) {
             Policy policy = policyOpt.get();
             PolicyDto policyDto = new PolicyDto();
             policyDto.setId(policy.getId());
+            policyDto.setCertificateNumber(policy.getCertificateNumber());
+            policyDto.setPolicyNumber(policy.getPolicyNumber());
             policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
             policyDto.setPolicyTypeId(policy.getPolicyTypeId());
             policyDto.setStartDate(policy.getStartDate());
@@ -101,6 +94,8 @@ public class PolicyService {
         logger.info("user ID: ==============================>" + userId);
         policy.setInsuranceCompanyId(policyDto.getInsuranceCompanyId());
         policy.setPolicyTypeId(policyDto.getPolicyTypeId());
+        policy.setCertificateNumber(policyDto.getCertificateNumber());
+        policy.setPolicyNumber(policyDto.getPolicyNumber());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
         policy.setCompanyId(orgId);
@@ -147,6 +142,8 @@ public class PolicyService {
 
         policy.setInsuranceCompanyId(policyDto.getInsuranceCompanyId());
         policy.setPolicyTypeId(policyDto.getPolicyTypeId());
+        policy.setCertificateNumber(policyDto.getCertificateNumber());
+        policy.setPolicyNumber(policyDto.getPolicyNumber());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
         policy.setCompanyId(policyDto.getCompanyId());
@@ -173,6 +170,8 @@ public class PolicyService {
             policyDto.setId(policy.getId());
             policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
             policyDto.setPolicyTypeId(policy.getPolicyTypeId());
+            policyDto.setCertificateNumber(policy.getCertificateNumber());
+            policyDto.setPolicyNumber(policy.getPolicyNumber());
             policyDto.setStartDate(policy.getStartDate());
             policyDto.setEndDate(policy.getEndDate());
             policyDto.setCompanyId(policy.getCompanyId());
