@@ -29,6 +29,12 @@ public class Policy {
     @Column(name = "insurance_company_id", nullable = false)
     private Long insuranceCompanyId;
 
+    @Column(name = "policy_number", nullable = false)
+    String policyNumber;
+
+    @Column(name = "certificate_number", nullable = false)
+    String certificateNumber;
+
     @Column(name = "policy_type_id", nullable = false)
     private Long policyTypeId;
 
@@ -146,5 +152,13 @@ public class Policy {
 
     public void setContactId(Long contactId) {
         this.contactId = contactId;
+    }
+
+    public String getPolicyNumber() {
+        return policyNumber;
+    }
+
+    public void setPolicyNumber(String policyNumber) {
+        this.policyNumber = policyNumber;
     }
 }
