@@ -92,8 +92,8 @@ public class PolicyController {
         }
     }
 
-    @GetMapping("/get-policys")
-    public ResponseEntity<?> getPolicys(HttpServletRequest request) {
+    @GetMapping("/get-policies")
+    public ResponseEntity<?> getPolicies(HttpServletRequest request) {
         Message message = new Message();
 
         try {
