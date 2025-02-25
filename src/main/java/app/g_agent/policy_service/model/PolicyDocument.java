@@ -19,7 +19,7 @@ import jakarta.persistence.ManyToOne;
 public class PolicyDocument {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
