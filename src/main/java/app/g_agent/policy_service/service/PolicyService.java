@@ -56,7 +56,7 @@ public class PolicyService {
             policyDto.setId(policy.getId());
             policyDto.setCertificateNumber(policy.getCertificateNumber());
             policyDto.setPolicyNumber(policy.getPolicyNumber());
-            policyDto.setProposalNumber(policy.getProposalNumber());
+            policyDto.setProposalId(policy.getProposalId());
             policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
             policyDto.setPolicyTypeId(policy.getPolicyTypeId());
             policyDto.setStartDate(policy.getStartDate());
@@ -96,7 +96,7 @@ public class PolicyService {
         policy.setInsuranceCompanyId(policyDto.getInsuranceCompanyId());
         policy.setPolicyTypeId(policyDto.getPolicyTypeId());
         policy.setCertificateNumber(policyDto.getCertificateNumber());
-        policy.setProposalNumber(policyDto.getProposalNumber());
+        policy.setProposalId(policyDto.getProposalId());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
@@ -146,10 +146,9 @@ public class PolicyService {
         policy.setPolicyTypeId(policyDto.getPolicyTypeId());
         policy.setCertificateNumber(policyDto.getCertificateNumber());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
-        policy.setProposalNumber(policyDto.getProposalNumber());
+        policy.setProposalId(policyDto.getProposalId());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
-        policy.setCompanyId(policyDto.getCompanyId());
         policy.setContactId(policyDto.getContactId());
         policy.setUpdatedBy(Long.valueOf(userId));
 
@@ -175,7 +174,7 @@ public class PolicyService {
             policyDto.setPolicyTypeId(policy.getPolicyTypeId());
             policyDto.setCertificateNumber(policy.getCertificateNumber());
             policyDto.setPolicyNumber(policy.getPolicyNumber());
-            policyDto.setProposalNumber(policy.getProposalNumber());
+            policyDto.setProposalId(policy.getProposalId());
             policyDto.setStartDate(policy.getStartDate());
             policyDto.setEndDate(policy.getEndDate());
             policyDto.setCompanyId(policy.getCompanyId());

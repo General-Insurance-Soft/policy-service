@@ -35,8 +35,8 @@ public class Policy {
     @Column(name = "certificate_number", nullable = false)
     String certificateNumber;
 
-    @Column(name = "proposal_number", nullable = false)
-    String proposalNumber;
+    @Column(name = "proposal_id", nullable = false)
+    Long proposalId;
 
     @Column(name = "policy_type_id", nullable = false)
     private Long policyTypeId;
@@ -173,11 +173,11 @@ public class Policy {
         this.certificateNumber = certificateNumber;
     }
 
-    public String getProposalNumber() {
-        return proposalNumber;
+    public Long getProposalId() {
+        return proposalId;
     }
 
-    public void setProposalNumber(String proposalNumber) {
-        this.proposalNumber = proposalNumber;
+    public void setProposalId(Long proposalId) {
+        this.proposalId = proposalId;
     }
 }

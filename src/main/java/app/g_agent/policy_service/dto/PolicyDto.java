@@ -7,6 +7,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -22,9 +23,9 @@ public class PolicyDto {
     @JsonProperty("certificate_number")
     String certificateNumber;
 
-    @NotBlank(message = "proposal_number is required")
-    @JsonProperty("proposal_number")
-    String proposalNumber;
+    @NotNull(message = "proposal_id is required")
+    @JsonProperty("proposal_id")
+    Long proposalId;
 
     @NotNull(message = "insurance_company_id is required")
     @JsonProperty("insurance_company_id")
@@ -51,7 +52,6 @@ public class PolicyDto {
     @JsonProperty("updated_by")
     private Long updatedBy;
 
-    @NotNull(message = "Company ID is required")
     @JsonProperty("company_id")
     private Long companyId;
 
@@ -61,6 +61,14 @@ public class PolicyDto {
 
     @JsonProperty("policy_documents")
     private Set<PolicyDocumentDto> policyDocuments;
+
+    @AssertTrue(message = "start date must be before end date")
+	public boolean isValidStartAndEndDate() {
+		if (startDate == null || endDate == null) {
+			return true; // Let @NotNull handle null checks if needed
+		}
+		return startDate.isBefore(endDate);
+	}
 
     // Getters and Setters
 
@@ -168,11 +176,11 @@ public class PolicyDto {
         this.certificateNumber = certificateNumber;
     }
 
-    public String getProposalNumber() {
-        return proposalNumber;
+    public Long getProposalId() {
+        return proposalId;
     }
 
-    public void setProposalNumber(String proposalNumber) {
-        this.proposalNumber = proposalNumber;
+    public void setProposalId(Long proposalId) {
+        this.proposalId = proposalId;
     }
 }
