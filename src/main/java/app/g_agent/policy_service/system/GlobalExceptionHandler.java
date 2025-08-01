@@ -38,7 +38,15 @@ public class GlobalExceptionHandler {
 		String errorMessage = ex.getLocalizedMessage();
 		ErrorDetails errorDetails = new ErrorDetails(404, errorMessage, path);
 
-		return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(DuplicateContactException.class)
+	public ResponseEntity<String> handleDuplicateContactException(DuplicateContactException ex) {
+		Map<String, String> error = new HashMap<>();
+		error.put("name", "Error");
+		error.put("message", ex.getMessage());
+		return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
 	}
 
 	@ExceptionHandler(Exception.class)
@@ -47,7 +55,8 @@ public class GlobalExceptionHandler {
 				"An unexpected error occurred. " + ex.getLocalizedMessage(),
 				request.getDescription(false).replace("uri=", ""));
 		logger.info("Error caught ==========> " + ex.getMessage());
-		return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+		//return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+		return ResponseEntity.status(500).body(Map.of("error", "An unexpected error occurred."));
 	}
 }
 

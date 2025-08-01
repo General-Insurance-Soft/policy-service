@@ -18,6 +18,7 @@ import app.g_agent.policy_service.model.Policy;
 import app.g_agent.policy_service.model.PolicyDocument;
 import app.g_agent.policy_service.repository.PolicyDocumentRepository;
 import app.g_agent.policy_service.repository.PolicyRepository;
+import app.g_agent.policy_service.system.DuplicateContactException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
@@ -121,13 +122,17 @@ public class PolicyService {
         try {
             policyRepository.save(policy);
             policyDocumentRepository.saveAll(policy.getPolicyDocuments()); // Save the policy documents
+            policyRepository.flush();
+            policyDocumentRepository.flush();
         } catch (DataIntegrityViolationException ex) {
+            logger.error("Exception thrown:=============> " + ex.getClass().getName(), ex);
             if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
-                logger.info("Policy error ==========> id: " + ex.getMessage());
-                throw new Exception("This policy already exists.");
+                 
+                throw new DuplicateContactException("This policy already exists.");
             }
-            throw ex; // Rethrow if not related to constraint violation
+            throw new RuntimeException("An unexpected database error occurred while saving the policy."); // Rethrow if not related to constraint violation
         }
+
     }
 
     @Transactional
