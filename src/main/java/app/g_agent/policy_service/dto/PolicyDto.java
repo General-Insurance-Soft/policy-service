@@ -64,13 +64,16 @@ public class PolicyDto {
     @JsonProperty("policy_documents")
     private Set<PolicyDocumentDto> policyDocuments;
 
+    @JsonProperty("policy_count")
+    private Long policyCount;
+
     @AssertTrue(message = "start date must be before end date")
-	public boolean isValidStartAndEndDate() {
-		if (startDate == null || endDate == null) {
-			return true; // Let @NotNull handle null checks if needed
-		}
-		return startDate.isBefore(endDate);
-	}
+    public boolean isValidStartAndEndDate() {
+        if (startDate == null || endDate == null) {
+            return true; // Let @NotNull handle null checks if needed
+        }
+        return startDate.isBefore(endDate);
+    }
 
     // Getters and Setters
 
@@ -184,5 +187,13 @@ public class PolicyDto {
 
     public void setProposalId(Long proposalId) {
         this.proposalId = proposalId;
+    }
+
+    public Long getPolicyCount() {
+        return policyCount;
+    }
+
+    public void setPolicyCount(Long policyCount) {
+        this.policyCount = policyCount;
     }
 }
