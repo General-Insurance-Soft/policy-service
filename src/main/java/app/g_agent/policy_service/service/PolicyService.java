@@ -1,6 +1,7 @@
 package app.g_agent.policy_service.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -207,23 +208,24 @@ public class PolicyService {
         List<PolicyDto> dtoList = new ArrayList<>();
         for (Object[] row : policyPage.getContent()) {
             PolicyDto policyDto = new PolicyDto();
+            logger.info("Mapping policy row: " + Arrays.toString(row));
             policyDto.setId((Long) row[5]);
             policyDto.setInsuranceCompanyId((Long) row[6]);
             policyDto.setPolicyTypeId((Long) row[7]);
+            policyDto.setProposalId((Long) row[8]);
             policyDto.setCertificateNumber((String) row[11]);
-            // policyDto.setStartDate(row[1]);
             policyDto.setStartDate(((java.sql.Date) row[1]).toLocalDate());
-
             policyDto.setEndDate(((java.sql.Date) row[0]).toLocalDate());
+
             policyDto.setCompanyId((Long) row[2]);
             policyDto.setContactId((Long) row[3]);
-            policyDto.setUpdatedBy((Long) row[9]);
-
+            policyDto.setPolicyNumber((String) row[12]);
+            policyDto.setUpdatedBy((Long) row[10]);
             policyDto.setCreatedAt(((java.sql.Timestamp) row[4]).toLocalDateTime());
-            policyDto.setUpdatedAt(((java.sql.Timestamp) row[8]).toLocalDateTime());
+            policyDto.setUpdatedAt(((java.sql.Timestamp) row[9]).toLocalDateTime());
 
             contacts.add((Long) row[3]);
-            updatedByUsers.add((Long) row[9]);
+            updatedByUsers.add((Long) row[10]);
 
             Long policyCount = ((Number) row[row.length - 1]).longValue(); // last element
             policyDto.setPolicyCount(policyCount);
