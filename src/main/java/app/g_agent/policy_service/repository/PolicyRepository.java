@@ -22,6 +22,8 @@ public interface PolicyRepository extends JpaRepository<Policy, Long> {
     @Query("SELECT DISTINCT p FROM Policy p LEFT JOIN FETCH p.policyDocuments WHERE p.id IN :ids")
     List<Policy> findAllWithDocumentsByIds(@Param("ids") Set<Long> ids);
 
+    List<Policy> findByContactIdAndCompanyId(Long contactId, Long companyId);
+
     @Query(value = """
             SELECT * FROM (
                 SELECT p.*

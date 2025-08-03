@@ -193,6 +193,48 @@ public class PolicyService {
         }
     }
 
+    public List<PolicyDto> getPolicyByContact(HttpServletRequest request, Long id) throws Exception {
+        // List<Proposal> proposals = proposalRepository.findAll();
+        Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
+
+        List<Policy> policyPage = policyRepository.findByContactIdAndCompanyId(id, orgId);
+
+        List<PolicyDto> policies = policyPage.stream().map(policy -> {
+            PolicyDto policyDto = new PolicyDto();
+            policyDto.setId(policy.getId());
+            policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
+            policyDto.setPolicyTypeId(policy.getPolicyTypeId());
+            policyDto.setStartDate(policy.getStartDate());
+            policyDto.setEndDate(policy.getEndDate());
+            policyDto.setCompanyId(policy.getCompanyId());
+            policyDto.setContactId(policy.getContactId());
+            policyDto.setUpdatedBy(policy.getUpdatedBy());
+
+            policyDto.setCertificateNumber(policy.getCertificateNumber());
+            policyDto.setPolicyNumber(policy.getPolicyNumber());
+            policyDto.setCreatedAt(policy.getCreatedAt());
+            policyDto.setUpdatedAt(policy.getUpdatedAt());
+
+            Set<PolicyDocumentDto> policyDocumentDtos = policy.getPolicyDocuments().stream().map(document -> {
+                PolicyDocumentDto documentDto = new PolicyDocumentDto();
+                documentDto.setId(document.getId());
+                documentDto.setFolderName(document.getFolderName());
+                documentDto.setDocumentName(document.getDocumentName());
+                documentDto.setBlobUrl(document.getBlobUrl());
+                documentDto.setUpdatedBy(document.getUpdatedBy());
+                documentDto.setCreatedAt(document.getCreatedAt());
+                return documentDto;
+            }).collect(Collectors.toSet());
+
+            policyDto.setPolicyDocuments(policyDocumentDtos);
+
+            return policyDto;
+        }).collect(Collectors.toList());
+
+        return policies;
+
+    }
+
     @Transactional
     public Map<String, Object> getPolicys(HttpServletRequest request, MultiValueMap<String, String> headers, int page,
             int size) throws Exception {

@@ -110,4 +110,16 @@ public class PolicyController {
             return ResponseEntity.status(403).body(message);
         }
     }
+
+    @GetMapping("/get-by-contact")
+    public ResponseEntity<?> getPolicyByContact(HttpServletRequest request, @RequestParam Long id) {
+        Message message = new Message();
+
+        try {
+            return ResponseEntity.ok(policyService.getPolicyByContact(request, id));
+        } catch (Exception ex) {
+            message.setMessage(ex.getMessage());
+            return ResponseEntity.status(403).body(message);
+        }
+    }
 }
