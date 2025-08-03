@@ -36,10 +36,12 @@ public class PolicyDto {
     private Long policyTypeId;
 
     @JsonProperty("start_date")
+    @NotNull(message = "start date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
 
     @JsonProperty("end_date")
+    @NotNull(message = "end date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
