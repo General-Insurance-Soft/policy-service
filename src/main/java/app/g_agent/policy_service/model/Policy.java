@@ -29,9 +29,6 @@ public class Policy {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "insurance_company_id", nullable = false)
-    private Long insuranceCompanyId;
-
     @Column(name = "policy_number", nullable = false)
     String policyNumber;
 
@@ -40,9 +37,6 @@ public class Policy {
 
     @Column(name = "proposal_id", nullable = false)
     Long proposalId;
-
-    @Column(name = "policy_type_id", nullable = false)
-    private Long policyTypeId;
 
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -80,28 +74,12 @@ public class Policy {
         this.id = id;
     }
 
-    public Long getInsuranceCompanyId() {
-        return insuranceCompanyId;
-    }
-
-    public void setInsuranceCompanyId(Long insuranceCompanyId) {
-        this.insuranceCompanyId = insuranceCompanyId;
-    }
-
     public Set<PolicyDocument> getPolicyDocuments() {
         return policyDocuments;
     }
 
     public void setPolicyDocuments(Set<PolicyDocument> policyDocuments) {
         this.policyDocuments = policyDocuments;
-    }
-
-    public Long getPolicyTypeId() {
-        return policyTypeId;
-    }
-
-    public void setPolicyTypeId(Long policyTypeId) {
-        this.policyTypeId = policyTypeId;
     }
 
     public LocalDate getStartDate() {

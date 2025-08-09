@@ -27,14 +27,6 @@ public class PolicyDto {
     @JsonProperty("proposal_id")
     Long proposalId;
 
-    @NotNull(message = "insurance_company_id is required")
-    @JsonProperty("insurance_company_id")
-    private Long insuranceCompanyId;
-
-    @NotNull(message = "policy_type_id is required")
-    @JsonProperty("policy_type_id")
-    private Long policyTypeId;
-
     @JsonProperty("start_date")
     @NotNull(message = "start date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -83,22 +75,6 @@ public class PolicyDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getInsuranceCompanyId() {
-        return insuranceCompanyId;
-    }
-
-    public void setInsuranceCompanyId(Long insuranceCompanyId) {
-        this.insuranceCompanyId = insuranceCompanyId;
-    }
-
-    public Long getPolicyTypeId() {
-        return policyTypeId;
-    }
-
-    public void setPolicyTypeId(Long policyTypeId) {
-        this.policyTypeId = policyTypeId;
     }
 
     public LocalDate getStartDate() {

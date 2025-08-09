@@ -79,8 +79,7 @@ public class PolicyService {
             policyDto.setCertificateNumber(policy.getCertificateNumber());
             policyDto.setPolicyNumber(policy.getPolicyNumber());
             policyDto.setProposalId(policy.getProposalId());
-            policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
-            policyDto.setPolicyTypeId(policy.getPolicyTypeId());
+
             policyDto.setStartDate(policy.getStartDate());
             policyDto.setEndDate(policy.getEndDate());
             policyDto.setCompanyId(policy.getCompanyId());
@@ -115,8 +114,7 @@ public class PolicyService {
         Long userId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "user-id").toString());
         Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
         logger.info("user ID: ==============================>" + userId);
-        policy.setInsuranceCompanyId(policyDto.getInsuranceCompanyId());
-        policy.setPolicyTypeId(policyDto.getPolicyTypeId());
+
         policy.setCertificateNumber(policyDto.getCertificateNumber());
         policy.setProposalId(policyDto.getProposalId());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
@@ -172,8 +170,6 @@ public class PolicyService {
 
         Long userId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "user-id").toString());
 
-        policy.setInsuranceCompanyId(policyDto.getInsuranceCompanyId());
-        policy.setPolicyTypeId(policyDto.getPolicyTypeId());
         policy.setCertificateNumber(policyDto.getCertificateNumber());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
         policy.setProposalId(policyDto.getProposalId());
@@ -202,8 +198,7 @@ public class PolicyService {
         List<PolicyDto> policies = policyPage.stream().map(policy -> {
             PolicyDto policyDto = new PolicyDto();
             policyDto.setId(policy.getId());
-            policyDto.setInsuranceCompanyId(policy.getInsuranceCompanyId());
-            policyDto.setPolicyTypeId(policy.getPolicyTypeId());
+
             policyDto.setStartDate(policy.getStartDate());
             policyDto.setEndDate(policy.getEndDate());
             policyDto.setCompanyId(policy.getCompanyId());
@@ -252,23 +247,21 @@ public class PolicyService {
             PolicyDto policyDto = new PolicyDto();
             logger.info("Mapping policy row: " + Arrays.toString(row));
             policyDto.setId((Long) row[5]);
-            policyDto.setInsuranceCompanyId((Long) row[6]);
-            policyDto.setPolicyTypeId((Long) row[7]);
-            policyDto.setProposalId((Long) row[8]);
-            policyDto.setCertificateNumber((String) row[11]);
+            policyDto.setProposalId((Long) row[6]);
+            policyDto.setCertificateNumber((String) row[9]);
             policyDto.setStartDate(((java.sql.Date) row[1]).toLocalDate());
             policyDto.setEndDate(((java.sql.Date) row[0]).toLocalDate());
 
             policyDto.setCompanyId((Long) row[2]);
             policyDto.setContactId((Long) row[3]);
-            policyDto.setPolicyNumber((String) row[12]);
-            policyDto.setUpdatedBy((Long) row[10]);
+            policyDto.setPolicyNumber((String) row[10]);
+            policyDto.setUpdatedBy((Long) row[8]);
             policyDto.setCreatedAt(((java.sql.Timestamp) row[4]).toLocalDateTime());
-            policyDto.setUpdatedAt(((java.sql.Timestamp) row[9]).toLocalDateTime());
+            policyDto.setUpdatedAt(((java.sql.Timestamp) row[7]).toLocalDateTime());
 
             contacts.add((Long) row[3]);
-            updatedByUsers.add((Long) row[10]);
-
+            updatedByUsers.add((Long) row[8]);
+            //[2025-08-16, 2025-08-09, 2, 7, 2025-08-09 11:53:04.449001, 1, 7, 2025-08-09 11:53:04.449001, 2, sdsdsd, sxcsds, 1, 1]
             Long policyCount = ((Number) row[row.length - 1]).longValue(); // last element
             policyDto.setPolicyCount(policyCount);
 
