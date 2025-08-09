@@ -163,7 +163,10 @@ public class PolicyService {
 
     @Transactional
     public void updatePolicy(HttpServletRequest request, PolicyDto policyDto, Long id) throws Exception {
-        Optional<Policy> policyOpt = policyRepository.findById(id);
+
+        Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
+
+        Optional<Policy> policyOpt = policyRepository.findByIdAndCompanyId(id, orgId);
 
         if (policyOpt.isEmpty()) {
             throw new Exception("The policy cannot be found");
@@ -175,10 +178,8 @@ public class PolicyService {
 
         policy.setCertificateNumber(policyDto.getCertificateNumber());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
-        policy.setProposalId(policyDto.getProposalId());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
-        policy.setContactId(policyDto.getContactId());
         policy.setUpdatedBy(Long.valueOf(userId));
 
         try {
