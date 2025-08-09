@@ -86,7 +86,7 @@ public class PolicyController {
         Message message = new Message();
 
         try {
-            return ResponseEntity.ok(policyService.getPolicyById(request, id));
+            return ResponseEntity.ok(policyService.getPolicyByIdandOrg(request, id));
         } catch (Exception ex) {
             message.setName("Error");
             message.setMessage(ex.getMessage());

@@ -69,8 +69,11 @@ public class PolicyService {
         }
     }
 
-    public PolicyDto getPolicyById(HttpServletRequest request, Long id) throws Exception {
-        Optional<Policy> policyOpt = policyRepository.findById(id);
+    public PolicyDto getPolicyByIdandOrg(HttpServletRequest request, Long id) throws Exception {
+
+        Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
+
+        Optional<Policy> policyOpt = policyRepository.findByIdAndCompanyId(id, orgId);
 
         if (policyOpt.isPresent()) {
             Policy policy = policyOpt.get();
