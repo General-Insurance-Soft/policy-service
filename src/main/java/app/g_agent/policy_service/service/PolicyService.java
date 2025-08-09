@@ -60,7 +60,9 @@ public class PolicyService {
 
     @Transactional
     public void deletePolicy(HttpServletRequest request, Long id) throws Exception {
-        Optional<Policy> policyOpt = policyRepository.findById(id);
+        Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
+
+        Optional<Policy> policyOpt = policyRepository.findByIdAndCompanyId(id, orgId);
 
         if (policyOpt.isPresent()) {
             policyRepository.delete(policyOpt.get());
@@ -265,7 +267,8 @@ public class PolicyService {
 
             contacts.add((Long) row[3]);
             updatedByUsers.add((Long) row[8]);
-            //[2025-08-16, 2025-08-09, 2, 7, 2025-08-09 11:53:04.449001, 1, 7, 2025-08-09 11:53:04.449001, 2, sdsdsd, sxcsds, 1, 1]
+            // [2025-08-16, 2025-08-09, 2, 7, 2025-08-09 11:53:04.449001, 1, 7, 2025-08-09
+            // 11:53:04.449001, 2, sdsdsd, sxcsds, 1, 1]
             Long policyCount = ((Number) row[row.length - 1]).longValue(); // last element
             policyDto.setPolicyCount(policyCount);
 
