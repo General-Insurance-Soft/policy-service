@@ -98,8 +98,7 @@ public class PolicyController {
         }
     }
 
-
-     @GetMapping("/get-policies")
+    @GetMapping("/get-policies")
     public ResponseEntity<?> getProposals(
             HttpServletRequest request,
             @RequestHeader MultiValueMap<String, String> headers,
