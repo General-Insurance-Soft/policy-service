@@ -25,13 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 
 import app.g_agent.policy_service.dto.ContactAddressWrapper;
+import app.g_agent.policy_service.dto.ContactDto;
 import app.g_agent.policy_service.dto.PolicyDocumentDto;
 import app.g_agent.policy_service.dto.PolicyDto;
+import app.g_agent.policy_service.dto.PolicySearchResultDto;
 import app.g_agent.policy_service.dto.UserDto;
 import app.g_agent.policy_service.model.Policy;
 import app.g_agent.policy_service.model.PolicyDocument;
 import app.g_agent.policy_service.repository.PolicyDocumentRepository;
 import app.g_agent.policy_service.repository.PolicyRepository;
+import app.g_agent.policy_service.repository.PolicySpecification;
 import app.g_agent.policy_service.system.DuplicateContactException;
 import jakarta.servlet.http.HttpServletRequest;
 import app.g_agent.policy_service.service.ContactsDataClient;
@@ -316,6 +319,72 @@ public class PolicyService {
         response.put("administrative_areas", contactsData.localityMapper);
 
         return response;
+
+    }
+
+    public List<PolicySearchResultDto> searchPolicies(HttpServletRequest request,
+            MultiValueMap<String, String> headers, String keyword) throws Exception {
+
+        int orgId = (int) jwtService.getTokenValue(jwtService.getJWT(request), "organization-id");
+        logger.info("The org id ==============> " + orgId);
+        List<Policy> policies = policyRepository.findAll(PolicySpecification.matchesKeyword(keyword, orgId));
+
+        if (policies.size() != 0) {
+            return policies.stream().map(
+                    policy -> {
+                        PolicySearchResultDto policySearchResultDto = new PolicySearchResultDto();
+                        policySearchResultDto.setId(policy.getId());
+                        policySearchResultDto.setPolicyNumber(policy.getPolicyNumber());
+                        policySearchResultDto.setContactName("");
+                        policySearchResultDto.setContactIdNumber("");
+                        policySearchResultDto.setCertificateNumber(policy.getCertificateNumber());
+                        policySearchResultDto.setProposalId(policy.getProposalId());
+                        policySearchResultDto.setContactId(policy.getContactId());
+
+                        return policySearchResultDto;
+                    }).collect(Collectors.toList());
+        } else {
+            headers.add("Content-Type", "application/json");
+
+            Map<String, String> flattenedHeaders = new HashMap<>();
+            headers.forEach((key, values) -> {
+                flattenedHeaders.put(key, String.join(",", values));
+            });
+
+            try {
+
+                List<ContactDto> results = contactsDataClient.getContactsByKeyword(keyword, flattenedHeaders);
+
+                List<Long> contactIds = results.stream()
+                        .map(ContactDto::getId)
+                        .collect(Collectors.toList());
+                logger.info("Got contactIds of size ==============> " + contactIds.size());
+                // find policy by contact ids
+                List<PolicySearchResultDto> policyResults = policyRepository
+                        .findByContactIdInAndCompanyId(contactIds, orgId)
+                        .stream()
+                        .map(policy -> {
+                            PolicySearchResultDto policySearchResultDto = new PolicySearchResultDto();
+                            policySearchResultDto.setId(policy.getId());
+                            policySearchResultDto.setPolicyNumber(policy.getPolicyNumber());
+                            policySearchResultDto.setContactName("");
+                            policySearchResultDto.setContactIdNumber("");
+                            policySearchResultDto.setCertificateNumber(policy.getCertificateNumber());
+                            policySearchResultDto.setProposalId(policy.getProposalId());
+                            policySearchResultDto.setContactId(policy.getContactId());
+
+                            return policySearchResultDto;
+                        }).collect(Collectors.toList());
+
+                return policyResults;
+
+            } catch (Exception e) {
+                logger.error("Error occurred while fetching users: {}",
+                        e.getMessage());
+                List<PolicySearchResultDto> results = new ArrayList<>();
+                return results;
+            }
+        }
 
     }
 

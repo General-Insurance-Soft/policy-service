@@ -1,5 +1,8 @@
 package app.g_agent.policy_service.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.g_agent.policy_service.commons.Message;
 import app.g_agent.policy_service.dto.PolicyDto;
+import app.g_agent.policy_service.dto.PolicySearchResultDto;
 import app.g_agent.policy_service.service.PolicyService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -121,5 +125,18 @@ public class PolicyController {
             message.setMessage(ex.getMessage());
             return ResponseEntity.status(403).body(message);
         }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PolicySearchResultDto>> searchPolicy(HttpServletRequest request,
+            @RequestHeader MultiValueMap<String, String> headers,
+            @RequestParam(required = false) String keyword) {
+        List<PolicySearchResultDto> results = new ArrayList<>();
+        try {
+            results = policyService.searchPolicies(request, headers, keyword);
+        } catch (Exception e) {
+            logger.info("Error searching policies " + e.getMessage());
+        }
+        return ResponseEntity.ok(results);
     }
 }

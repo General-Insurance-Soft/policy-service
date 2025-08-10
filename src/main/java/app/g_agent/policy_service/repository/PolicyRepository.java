@@ -7,12 +7,13 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import app.g_agent.policy_service.model.Policy;
 
-public interface PolicyRepository extends JpaRepository<Policy, Long> {
+public interface PolicyRepository extends JpaRepository<Policy, Long>, JpaSpecificationExecutor<Policy> {
     Optional<Policy> findById(Long id);
 
     Optional<Policy> findByIdAndCompanyId(Long id, Long companyId);
@@ -51,4 +52,8 @@ public interface PolicyRepository extends JpaRepository<Policy, Long> {
             ) AS count_table
             """, nativeQuery = true)
     Page<Object[]> findLatestPoliciesPerContact(Pageable pageable, @Param("companyId") Long companyId);
+
+    @Query("SELECT p FROM Policy p WHERE p.contactId IN :contactIds AND p.companyId = :companyId")
+    List<Policy> findByContactIdInAndCompanyId(@Param("contactIds") List<Long> contactIds,
+            @Param("companyId") int companyId);
 }
