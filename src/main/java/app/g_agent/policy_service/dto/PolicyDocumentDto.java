@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 
 public class PolicyDocumentDto {
@@ -30,6 +31,16 @@ public class PolicyDocumentDto {
 
     @JsonProperty("policy_id")
     private Long policyId;
+
+    //document_type
+    @JsonProperty("document_type")
+    private Long documentType;
+
+    @JsonProperty("file_extension")
+    String fileExtension;
+    
+    @JsonProperty("version_id")
+    private String versionId;
 
     // Getters and Setters
 
@@ -65,6 +76,22 @@ public class PolicyDocumentDto {
         this.blobUrl = blobUrl;
     }
 
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
+    }
+
+    public String getVersionId() {
+        return versionId;
+    }
+
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -88,4 +115,13 @@ public class PolicyDocumentDto {
     public void setPolicyId(Long policyId) {
         this.policyId = policyId;
     }
+
+     public Long getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(Long documentType) {
+        this.documentType = documentType;
+    }
+
 }

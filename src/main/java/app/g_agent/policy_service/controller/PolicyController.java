@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import app.g_agent.policy_service.commons.Message;
 import app.g_agent.policy_service.dto.PolicyDto;
@@ -36,12 +39,14 @@ public class PolicyController {
     @Autowired
     PolicyService policyService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createPolicy(HttpServletRequest request, @Valid @RequestBody PolicyDto policyDto) {
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createPolicy(HttpServletRequest request,
+            @RequestPart("data") @Valid PolicyDto data,
+            @RequestPart("files") List<MultipartFile> files) {
         Message message = new Message();
 
         try {
-            policyService.createPolicy(request, policyDto);
+            policyService.createPolicy(request, data, files);
         } catch (Exception ex) {
             message.setName("Error");
             message.setMessage(ex.getMessage());

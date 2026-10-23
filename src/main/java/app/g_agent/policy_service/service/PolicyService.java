@@ -10,10 +10,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 import app.g_agent.policy_service.dto.ContactAddressWrapper;
 import app.g_agent.policy_service.dto.ContactDto;
@@ -37,6 +41,9 @@ import app.g_agent.policy_service.repository.PolicyRepository;
 import app.g_agent.policy_service.repository.PolicySpecification;
 import app.g_agent.policy_service.system.DuplicateContactException;
 import jakarta.servlet.http.HttpServletRequest;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import app.g_agent.policy_service.service.ContactsDataClient;
 import app.g_agent.policy_service.service.UsersDataClient;
 
@@ -53,6 +60,14 @@ public class PolicyService {
     private ContactsDataClient contactsDataClient;
     @Autowired
     private UsersDataClient usersDataClient;
+
+    @Value("${backblaze.s3.endpoint-url}")
+    private String ENDPOINT_URL;
+    @Value("${backblaze.s3.bucket-name}")
+    private String bucketName;
+
+    @Autowired
+    B2ClientFactory b2ClientFactory;
 
     public PolicyService(PolicyRepository policyRepository, PolicyDocumentRepository policyDocumentRepository,
             JwtService jwtService) {
@@ -86,7 +101,6 @@ public class PolicyService {
             policyDto.setId(policy.getId());
             policyDto.setCertificateNumber(policy.getCertificateNumber());
             policyDto.setPolicyNumber(policy.getPolicyNumber());
-            policyDto.setProposalId(policy.getProposalId());
 
             policyDto.setStartDate(policy.getStartDate());
             policyDto.setEndDate(policy.getEndDate());
@@ -115,8 +129,7 @@ public class PolicyService {
         }
     }
 
-    @Transactional
-    public void createPolicy(HttpServletRequest request, PolicyDto policyDto) throws Exception {
+    private Policy preparePolicy(HttpServletRequest request, PolicyDto policyDto) throws Exception {
         Policy policy = new Policy();
 
         Long userId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "user-id").toString());
@@ -124,25 +137,79 @@ public class PolicyService {
         logger.info("user ID: ==============================>" + userId);
 
         policy.setCertificateNumber(policyDto.getCertificateNumber());
-        policy.setProposalId(policyDto.getProposalId());
         policy.setPolicyNumber(policyDto.getPolicyNumber());
         policy.setStartDate(policyDto.getStartDate());
         policy.setEndDate(policyDto.getEndDate());
         policy.setCompanyId(orgId);
         policy.setContactId(policyDto.getContactId());
         policy.setUpdatedBy(Long.valueOf(userId));
+        policy.setProposalId(policyDto.getProposalId());
+
+        return policy;
+    }
+
+    private Set<PolicyDocumentDto> preparePolicyDocuments(List<Map<String, String>> policyDocs, Policy policy,
+            Long userId) {
+        Set<PolicyDocumentDto> policyDocuments = new HashSet<>();
+
+        for (Map<String, String> fileMeta : (List<Map<String, String>>) policyDocs) {
+            PolicyDocumentDto doc = new PolicyDocumentDto();
+            doc.setDocumentName(fileMeta.get("name"));
+            doc.setBlobUrl((String) fileMeta.get("blob_url"));
+            doc.setVersionId((String) fileMeta.get("version_id"));
+            doc.setFileExtension(fileMeta.get("extension"));
+            policyDocuments.add(doc);
+        }
+        logger.debug("Alter policy documents DTO ======>: " + policyDocuments.toString());
+        return policyDocuments;
+    }
+
+    private Set<PolicyDocument> preparePolicyDocumentObject(PolicyDto policyDto, Policy policy,
+            Long userId) {
+        Set<PolicyDocument> policyDocuments = new HashSet<>();
 
         if (policyDto.getPolicyDocuments() != null) {
-            Set<PolicyDocument> policyDocuments = new HashSet<>();
             policyDto.getPolicyDocuments().forEach(documentDto -> {
+
+                // Skip empty documents
+                if (documentDto.getBlobUrl() == null ||
+                        documentDto.getDocumentName() == null ||
+                        documentDto.getDocumentType() == null) {
+                    logger.debug("Skipping empty document DTO");
+                    return;
+                }
                 PolicyDocument document = new PolicyDocument();
                 document.setFolderName(documentDto.getFolderName());
                 document.setDocumentName(documentDto.getDocumentName());
                 document.setBlobUrl(documentDto.getBlobUrl());
+                document.setDocumentType(documentDto.getDocumentType());
+                document.setVersionId(documentDto.getVersionId());
                 document.setUpdatedBy(Long.valueOf(userId));
                 document.setPolicy(policy); // Set the policy reference
                 policyDocuments.add(document);
             });
+            policy.setPolicyDocuments(policyDocuments);
+        }
+
+        return policyDocuments;
+    }
+
+    @Transactional
+    public void createPolicy(HttpServletRequest request, PolicyDto policyDto,
+            List<MultipartFile> files) throws Exception {
+
+        Policy policy = this.preparePolicy(request, policyDto);
+
+        Long userId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "user-id").toString());
+        Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
+
+        List<Map<String, String>> policyDocs = this.uploadFilesToS3(files, orgId);
+        Set<PolicyDocumentDto> policyDocumentDtos = this.preparePolicyDocuments(policyDocs, policy, userId);
+        policyDto.setPolicyDocuments(policyDocumentDtos);
+
+        if (policyDto.getPolicyDocuments() != null) {
+            logger.info("policyDto.getPolicyDocuments() not null");
+            Set<PolicyDocument> policyDocuments = this.preparePolicyDocumentObject(policyDto, policy, userId);
             policy.setPolicyDocuments(policyDocuments);
         }
 
@@ -157,11 +224,7 @@ public class PolicyService {
 
                 throw new DuplicateContactException("This policy already exists.");
             }
-            throw new RuntimeException("An unexpected database error occurred while saving the policy."); // Rethrow if
-                                                                                                          // not related
-                                                                                                          // to
-                                                                                                          // constraint
-                                                                                                          // violation
+            throw new RuntimeException("An unexpected database error occurred while saving the policy.");
         }
 
     }
@@ -199,7 +262,7 @@ public class PolicyService {
     }
 
     public List<PolicyDto> getPolicyByContact(HttpServletRequest request, Long id) throws Exception {
-        // List<Proposal> proposals = proposalRepository.findAll();
+        // List<Policy> policys = policyRepository.findAll();
         Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
 
         List<Policy> policyPage = policyRepository.findByContactIdAndCompanyId(id, orgId);
@@ -243,7 +306,7 @@ public class PolicyService {
     public Map<String, Object> getPolicys(HttpServletRequest request, MultiValueMap<String, String> headers, int page,
             int size) throws Exception {
 
-        // List<Proposal> proposals = policyRepository.findAll();
+        // List<Policy> policys = policyRepository.findAll();
         Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
         Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
         Page<Object[]> policyPage = policyRepository.findLatestPoliciesPerContact(pageable, orgId);
@@ -256,7 +319,6 @@ public class PolicyService {
             PolicyDto policyDto = new PolicyDto();
             logger.info("Mapping policy row: " + Arrays.toString(row));
             policyDto.setId((Long) row[5]);
-            policyDto.setProposalId((Long) row[6]);
             policyDto.setCertificateNumber((String) row[9]);
             policyDto.setStartDate(((java.sql.Date) row[1]).toLocalDate());
             policyDto.setEndDate(((java.sql.Date) row[0]).toLocalDate());
@@ -338,7 +400,6 @@ public class PolicyService {
                         policySearchResultDto.setContactName("");
                         policySearchResultDto.setContactIdNumber("");
                         policySearchResultDto.setCertificateNumber(policy.getCertificateNumber());
-                        policySearchResultDto.setProposalId(policy.getProposalId());
                         policySearchResultDto.setContactId(policy.getContactId());
 
                         return policySearchResultDto;
@@ -370,7 +431,6 @@ public class PolicyService {
                             policySearchResultDto.setContactName("");
                             policySearchResultDto.setContactIdNumber("");
                             policySearchResultDto.setCertificateNumber(policy.getCertificateNumber());
-                            policySearchResultDto.setProposalId(policy.getProposalId());
                             policySearchResultDto.setContactId(policy.getContactId());
 
                             return policySearchResultDto;
@@ -450,6 +510,114 @@ public class PolicyService {
         return ids.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
+    }
+
+    private List<Map<String, String>> uploadFilesToS3(List<MultipartFile> filesList, Long orgId) {
+
+        if (orgId == null) {
+            logger.warn("Organization ID is null for uploading proposal and user files.");
+            return new ArrayList<>();
+        }
+
+        Matcher matcher = Pattern.compile("https://s3\\.([a-z0-9-]+)\\.backblazeb2\\.com")
+                .matcher(ENDPOINT_URL.trim());
+        String region = matcher.find() ? matcher.group(1) : null;
+        if (region == null) {
+            logger.error("Can't find a region in the endpoint URL: " + ENDPOINT_URL);
+            return new ArrayList<>();
+        }
+
+        List<Map<String, String>> filesMetaList = new ArrayList<>();
+        try {
+            S3Client b2 = b2ClientFactory.createClient();
+
+            for (MultipartFile file : filesList) {
+
+                String contentType = file.getContentType() != null
+                        ? file.getContentType()
+                        : "";
+
+                // Accept files with no content type, but reject empty "blob" files
+                if (("blob".equalsIgnoreCase(file.getOriginalFilename())
+                        || file.getOriginalFilename().isEmpty())
+                        && file.getSize() == 0) {
+                    logger.info("Skipping empty blob file upload.");
+                    continue;
+                }
+
+                if (!contentType.isEmpty()
+                        && !contentType.matches("image/.*|application/pdf")) {
+                    throw new IllegalArgumentException(
+                            "Invalid file type: " + file.getOriginalFilename());
+                }
+
+                byte[] bytes = file.getBytes();
+
+                String key;
+
+                String input = file.getOriginalFilename();
+                String result = input
+                        .replaceAll("name:", "")
+                        .replaceAll("-type:[^-]+", "")
+                        .replaceAll("-extension:[^-]+", "");
+
+                key = orgId + "/policy-service/" + result;
+
+                PutObjectRequest objRequest = PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(contentType)
+                        .build();
+
+                PutObjectResponse putObjectResponse = b2.putObject(
+                        objRequest,
+                        software.amazon.awssdk.core.sync.RequestBody.fromBytes(bytes));
+
+                logger.info("Response from S3 for file {}: {}", file.getOriginalFilename(),
+                        putObjectResponse.toString());
+
+                String fileUrl = String.format(
+                        "%s/%s/%s",
+                        ENDPOINT_URL,
+                        bucketName,
+                        key);
+
+                logger.debug("process proposal files ======>: ");
+                Map<String, String> filesMeta = new HashMap<>();
+
+                Pattern fileNamePattern = Pattern.compile("name:([^\\-]+)");
+                Pattern fileTypePattern = Pattern.compile("-type:([^\\-]+)");
+                Pattern fileExtensionPattern = Pattern.compile("-extension:([^\\-]+)");
+
+                Matcher fileName = fileNamePattern.matcher(input);
+                Matcher typeVal = fileTypePattern.matcher(input);
+                Matcher extensionVal = fileExtensionPattern.matcher(input);
+
+                logger.debug("process regex and create metadata ======>: ");
+                if (fileName.find() && typeVal.find()) {
+                    String name = fileName.group(1);
+                    String typeNumber = typeVal.group(1);
+                    String extension = extensionVal.group(1);
+                    filesMeta.put("name", name);
+                    filesMeta.put("type", typeNumber);
+                    filesMeta.put("version_id", (String) putObjectResponse.versionId());
+                    filesMeta.put("extension", extension);
+                }
+
+                filesMeta.put("blob_url", fileUrl);
+
+                logger.debug("Add objects to map for processing ======>: ");
+
+                filesMetaList.add(filesMeta);
+
+                logger.debug("objects added to map for processing ======>: ");
+
+            }
+        } catch (Exception e) {
+            logger.error("Error uploading file to S3: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        return filesMetaList;
     }
 
 }

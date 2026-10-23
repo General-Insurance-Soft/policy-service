@@ -35,6 +35,15 @@ public class PolicyDocument {
     @Column(name = "blob_url", nullable = false)
     private String blobUrl;
 
+    @Column(name = "file_extension", nullable = false)
+    String fileExtension;
+
+    @Column(name = "version_id", nullable = false)
+    private String versionId;
+
+    @Column(name = "document_type", nullable = false)
+    private Long documentType;
+
     @CreatedDate
     @Column(updatable = false, name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -76,12 +85,28 @@ public class PolicyDocument {
         this.documentName = documentName;
     }
 
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
+    }
+
     public String getBlobUrl() {
         return blobUrl;
     }
 
     public void setBlobUrl(String blobUrl) {
         this.blobUrl = blobUrl;
+    }
+
+    public String getVersionId() {
+        return versionId;
+    }
+
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -98,5 +123,13 @@ public class PolicyDocument {
 
     public void setUpdatedBy(Long updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public Long getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(Long documentType) {
+        this.documentType = documentType;
     }
 }
