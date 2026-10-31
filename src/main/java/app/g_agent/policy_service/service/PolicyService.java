@@ -106,6 +106,7 @@ public class PolicyService {
             policyDto.setEndDate(policy.getEndDate());
             policyDto.setCompanyId(policy.getCompanyId());
             policyDto.setContactId(policy.getContactId());
+            policyDto.setProposalId(policy.getProposalId());
             policyDto.setUpdatedBy(policy.getUpdatedBy());
             policyDto.setCreatedAt(policy.getCreatedAt());
             policyDto.setUpdatedAt(policy.getUpdatedAt());
@@ -279,6 +280,7 @@ public class PolicyService {
 
             policyDto.setCertificateNumber(policy.getCertificateNumber());
             policyDto.setPolicyNumber(policy.getPolicyNumber());
+            policyDto.setProposalId(policy.getProposalId());
             policyDto.setCreatedAt(policy.getCreatedAt());
             policyDto.setUpdatedAt(policy.getUpdatedAt());
 
@@ -512,7 +514,7 @@ public class PolicyService {
                 .collect(Collectors.joining(","));
     }
 
-    private List<Map<String, String>> uploadFilesToS3(List<MultipartFile> filesList, Long orgId) {
+   private List<Map<String, String>> uploadFilesToS3(List<MultipartFile> filesList, Long orgId) {
 
         if (orgId == null) {
             logger.warn("Organization ID is null for uploading proposal and user files.");
@@ -558,8 +560,7 @@ public class PolicyService {
                 String input = file.getOriginalFilename();
                 String result = input
                         .replaceAll("name:", "")
-                        .replaceAll("-type:[^-]+", "")
-                        .replaceAll("-extension:[^-]+", "");
+                        .replaceAll("-type:[^-]+", "");
 
                 key = orgId + "/policy-service/" + result;
 
@@ -582,26 +583,22 @@ public class PolicyService {
                         bucketName,
                         key);
 
-                logger.debug("process proposal files ======>: ");
+                logger.debug("process policy files ======>: ");
                 Map<String, String> filesMeta = new HashMap<>();
 
                 Pattern fileNamePattern = Pattern.compile("name:([^\\-]+)");
                 Pattern fileTypePattern = Pattern.compile("-type:([^\\-]+)");
-                Pattern fileExtensionPattern = Pattern.compile("-extension:([^\\-]+)");
 
                 Matcher fileName = fileNamePattern.matcher(input);
                 Matcher typeVal = fileTypePattern.matcher(input);
-                Matcher extensionVal = fileExtensionPattern.matcher(input);
 
                 logger.debug("process regex and create metadata ======>: ");
                 if (fileName.find() && typeVal.find()) {
                     String name = fileName.group(1);
                     String typeNumber = typeVal.group(1);
-                    String extension = extensionVal.group(1);
                     filesMeta.put("name", name);
                     filesMeta.put("type", typeNumber);
                     filesMeta.put("version_id", (String) putObjectResponse.versionId());
-                    filesMeta.put("extension", extension);
                 }
 
                 filesMeta.put("blob_url", fileUrl);
