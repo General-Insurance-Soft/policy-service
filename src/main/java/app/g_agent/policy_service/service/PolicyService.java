@@ -328,6 +328,7 @@ public class PolicyService {
             policyDto.setCompanyId((Long) row[2]);
             policyDto.setContactId((Long) row[3]);
             policyDto.setPolicyNumber((String) row[10]);
+            policyDto.setProposalId((Long) row[6]);
             policyDto.setUpdatedBy((Long) row[8]);
             policyDto.setCreatedAt(((java.sql.Timestamp) row[4]).toLocalDateTime());
             policyDto.setUpdatedAt(((java.sql.Timestamp) row[7]).toLocalDateTime());
