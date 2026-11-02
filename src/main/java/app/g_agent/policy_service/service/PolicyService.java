@@ -154,7 +154,8 @@ public class PolicyService {
         Set<PolicyDocumentDto> policyDocuments = new HashSet<>();
 
         for (Map<String, String> fileMeta : (List<Map<String, String>>) policyDocs) {
-            logger.debug("preparePolicyDocuments policy documents DTO ======>: " + fileMeta.get("name") + " " + fileMeta.get("blob_url") + " " + fileMeta.get("version_id"));
+            logger.debug("preparePolicyDocuments policy documents DTO ======>: " + fileMeta.get("name") + " "
+                    + fileMeta.get("blob_url") + " " + fileMeta.get("version_id"));
             PolicyDocumentDto doc = new PolicyDocumentDto();
             doc.setDocumentName(fileMeta.get("name"));
             doc.setBlobUrl((String) fileMeta.get("blob_url"));
@@ -290,7 +291,14 @@ public class PolicyService {
                 documentDto.setId(document.getId());
                 documentDto.setFolderName(document.getFolderName());
                 documentDto.setDocumentName(document.getDocumentName());
-                documentDto.setBlobUrl(document.getBlobUrl());
+
+                if (document.getBlobUrl() != null) {
+                    String bucketUrl = b2ClientFactory.getPreSignedUrl(document.getBlobUrl());
+                    documentDto.setBlobUrl(bucketUrl);
+                } else {
+                    documentDto.setBlobUrl("");
+                }
+
                 documentDto.setUpdatedBy(document.getUpdatedBy());
                 documentDto.setCreatedAt(document.getCreatedAt());
                 return documentDto;
@@ -356,7 +364,12 @@ public class PolicyService {
                             docDto.setId(document.getId());
                             docDto.setFolderName(document.getFolderName());
                             docDto.setDocumentName(document.getDocumentName());
-                            docDto.setBlobUrl(document.getBlobUrl());
+                            if (document.getBlobUrl() != null) {
+                                String bucketUrl = b2ClientFactory.getPreSignedUrl(document.getBlobUrl());
+                                docDto.setBlobUrl(bucketUrl);
+                            } else {
+                                docDto.setBlobUrl("");
+                            }
                             docDto.setUpdatedBy(document.getUpdatedBy());
                             docDto.setCreatedAt(document.getCreatedAt());
                             return docDto;
@@ -516,7 +529,7 @@ public class PolicyService {
                 .collect(Collectors.joining(","));
     }
 
-   private List<Map<String, String>> uploadFilesToS3(List<MultipartFile> filesList, Long orgId) {
+    private List<Map<String, String>> uploadFilesToS3(List<MultipartFile> filesList, Long orgId) {
 
         if (orgId == null) {
             logger.warn("Organization ID is null for uploading proposal and user files.");
@@ -602,7 +615,7 @@ public class PolicyService {
                     filesMeta.put("type", typeNumber);
                     filesMeta.put("version_id", (String) putObjectResponse.versionId());
                 }
-                logger.debug("Blob URL  ======= > "+ fileUrl);
+                logger.debug("Blob URL  ======= > " + fileUrl);
                 filesMeta.put("blob_url", fileUrl);
 
                 logger.debug("Add objects to map for processing ======>: ");
