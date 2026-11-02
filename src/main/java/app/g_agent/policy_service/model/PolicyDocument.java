@@ -26,7 +26,7 @@ public class PolicyDocument {
     @JoinColumn(name = "policy_id", nullable = false)
     private Policy policy;
 
-    @Column(name = "folder_name", nullable = false)
+    @Column(name = "folder_name")
     private String folderName;
 
     @Column(name = "document_name", nullable = false)
@@ -34,9 +34,6 @@ public class PolicyDocument {
 
     @Column(name = "blob_url", nullable = false)
     private String blobUrl;
-
-    @Column(name = "file_extension", nullable = false)
-    String fileExtension;
 
     @Column(name = "version_id", nullable = false)
     private String versionId;
@@ -83,14 +80,6 @@ public class PolicyDocument {
 
     public void setDocumentName(String documentName) {
         this.documentName = documentName;
-    }
-
-    public String getFileExtension() {
-        return fileExtension;
-    }
-
-    public void setFileExtension(String fileExtension) {
-        this.fileExtension = fileExtension;
     }
 
     public String getBlobUrl() {

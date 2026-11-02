@@ -154,14 +154,15 @@ public class PolicyService {
         Set<PolicyDocumentDto> policyDocuments = new HashSet<>();
 
         for (Map<String, String> fileMeta : (List<Map<String, String>>) policyDocs) {
+            logger.debug("preparePolicyDocuments policy documents DTO ======>: " + fileMeta.get("name") + " " + fileMeta.get("blob_url") + " " + fileMeta.get("version_id"));
             PolicyDocumentDto doc = new PolicyDocumentDto();
             doc.setDocumentName(fileMeta.get("name"));
             doc.setBlobUrl((String) fileMeta.get("blob_url"));
+            doc.setDocumentType(Long.valueOf(fileMeta.get("type").hashCode())); // Example mapping,
             doc.setVersionId((String) fileMeta.get("version_id"));
-            doc.setFileExtension(fileMeta.get("extension"));
             policyDocuments.add(doc);
         }
-        logger.debug("Alter policy documents DTO ======>: " + policyDocuments.toString());
+        logger.debug("preparePolicyDocuments policy documents DTO ======>: " + policyDocuments.toString());
         return policyDocuments;
     }
 
@@ -601,7 +602,7 @@ public class PolicyService {
                     filesMeta.put("type", typeNumber);
                     filesMeta.put("version_id", (String) putObjectResponse.versionId());
                 }
-
+                logger.debug("Blob URL  ======= > "+ fileUrl);
                 filesMeta.put("blob_url", fileUrl);
 
                 logger.debug("Add objects to map for processing ======>: ");
