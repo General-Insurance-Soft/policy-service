@@ -35,9 +35,6 @@ public class PolicyDocumentDto {
     //document_type
     @JsonProperty("document_type")
     private Long documentType;
-
-    @JsonProperty("file_extension")
-    String fileExtension;
     
     @JsonProperty("version_id")
     private String versionId;
@@ -74,14 +71,6 @@ public class PolicyDocumentDto {
 
     public void setBlobUrl(String blobUrl) {
         this.blobUrl = blobUrl;
-    }
-
-    public String getFileExtension() {
-        return fileExtension;
-    }
-
-    public void setFileExtension(String fileExtension) {
-        this.fileExtension = fileExtension;
     }
 
     public String getVersionId() {
