@@ -57,21 +57,17 @@ public class PolicyController {
         return ResponseEntity.ok(message);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<?> updatePolicy(HttpServletRequest request, @RequestBody PolicyDto policyDto,
-            @RequestParam Long id) {
-        Message message = new Message();
-
+    @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updatePolicy(
+            HttpServletRequest request,
+            @RequestParam Long id,
+            @RequestPart("data") @Valid PolicyDto data,
+            @RequestPart("files") List<MultipartFile> files) {
         try {
-            policyService.updatePolicy(request, policyDto, id);
+            return policyService.updatePolicy(request, data, files, id);
         } catch (Exception ex) {
-            message.setName("Error");
-            message.setMessage(ex.getMessage());
-            return ResponseEntity.status(403).body(message);
+            return ResponseEntity.status(501).body("Error: " + ex.getMessage());
         }
-        message.setName("Success");
-        message.setMessage("Policy updated successfully");
-        return ResponseEntity.ok(message);
     }
 
     @DeleteMapping("/delete")

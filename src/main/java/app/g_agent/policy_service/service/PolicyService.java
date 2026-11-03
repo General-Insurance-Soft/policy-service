@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
@@ -40,6 +41,7 @@ import app.g_agent.policy_service.repository.PolicyDocumentRepository;
 import app.g_agent.policy_service.repository.PolicyRepository;
 import app.g_agent.policy_service.repository.PolicySpecification;
 import app.g_agent.policy_service.system.DuplicateContactException;
+import app.g_agent.policy_service.commons.Message;
 import jakarta.servlet.http.HttpServletRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -232,16 +234,23 @@ public class PolicyService {
 
     }
 
+
     @Transactional
-    public void updatePolicy(HttpServletRequest request, PolicyDto policyDto, Long id) throws Exception {
+    public ResponseEntity<?> updatePolicy(HttpServletRequest request, PolicyDto policyDto,
+            List<MultipartFile> files, Long id) throws Exception {
 
         Long orgId = Long.parseLong(jwtService.getTokenValue(jwtService.getJWT(request), "organization-id").toString());
-
         Optional<Policy> policyOpt = policyRepository.findByIdAndCompanyId(id, orgId);
 
+        logger.debug("Begin updatePolicy with policy ID: " + id + " and org ID: " + orgId);
         if (policyOpt.isEmpty()) {
-            throw new Exception("The policy cannot be found");
+            // throw new Exception("The policy cannot be found");
+            Message message = new Message();
+            message.setMessage("The policy cannot be found");
+            return ResponseEntity.status(501).body(message);
         }
+
+        logger.debug("Policy not empty");
 
         Policy policy = policyOpt.get();
 
@@ -253,15 +262,37 @@ public class PolicyService {
         policy.setEndDate(policyDto.getEndDate());
         policy.setUpdatedBy(Long.valueOf(userId));
 
+        logger.debug("Finish updating policy fields, now processing files");
+
+        List<Map<String, String>> policyDocs = this.uploadFilesToS3(files, orgId);
+        Set<PolicyDocumentDto> policyDocumentDtos = this.preparePolicyDocuments(policyDocs, policy, userId);
+        policyDto.setPolicyDocuments(policyDocumentDtos);
+
+        Set<PolicyDocument> existingDocs = policy.getPolicyDocuments();
+        Set<PolicyDocument> incomingDocuments = null;
+        if (policyDto.getPolicyDocuments() != null) {
+            logger.info("policyDto.getPolicyDocuments() not null");
+            incomingDocuments = this.preparePolicyDocumentObject(policyDto, policy, userId);
+            // policy.setPolicyDocuments(policyDocuments);
+        }
+        for (PolicyDocument incoming : incomingDocuments) {
+            existingDocs.add(incoming);
+        }
+
+        policy.setPolicyDocuments(existingDocs);
+
+        logger.debug("Finish processing files, now saving policy and documents");
+
         try {
             policyRepository.save(policy);
+            Message message = new Message();
+            message.setMessage("Policy updated successfully");
+            return ResponseEntity.status(200).body(message);
         } catch (DataIntegrityViolationException ex) {
-            if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
-                logger.info("Policy error ==========> id: " + ex.getMessage());
-                throw new Exception("This policy already exists.");
-            }
+
             throw ex; // Rethrow if not related to constraint violation
         }
+
     }
 
     public List<PolicyDto> getPolicyByContact(HttpServletRequest request, Long id) throws Exception {
