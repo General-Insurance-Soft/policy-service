@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +16,18 @@ import app.g_agent.policy_service.dto.PolicyDocumentDto;
 import app.g_agent.policy_service.model.PolicyDocument;
 import app.g_agent.policy_service.repository.PolicyDocumentRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 
 @Service
 public class PolicyDocumentService {
+
+    @Value("${backblaze.s3.bucket-name}")
+    private String bucketName;
+
+    @Autowired
+    B2ClientFactory b2ClientFactory;
 
     private static final Logger logger = LoggerFactory.getLogger(PolicyService.class);
 
@@ -51,7 +62,8 @@ public class PolicyDocumentService {
     }
 
     @Transactional
-    public void updatePolicyDocument(HttpServletRequest request, PolicyDocumentDto policyDocumentDto, Long id) throws Exception {
+    public void updatePolicyDocument(HttpServletRequest request, PolicyDocumentDto policyDocumentDto, Long id)
+            throws Exception {
         Optional<PolicyDocument> policyDocumentOpt = policyDocumentRepository.findById(id);
 
         if (policyDocumentOpt.isEmpty()) {
@@ -79,14 +91,50 @@ public class PolicyDocumentService {
     }
 
     @Transactional
-    public void deletePolicyDocument(HttpServletRequest request, Long id) throws Exception {
+    public boolean deletePolicyDocument(HttpServletRequest request, Long id) throws Exception {
+
         Optional<PolicyDocument> policyDocumentOpt = policyDocumentRepository.findById(id);
 
-        if (policyDocumentOpt.isPresent()) {
-            policyDocumentRepository.delete(policyDocumentOpt.get());
-        } else {
+        if (!policyDocumentOpt.isPresent()) {
             throw new Exception("The policy document cannot be found");
         }
+
+        try {
+
+            String bucketUrl = policyDocumentOpt.get().getBlobUrl();
+
+            if (bucketUrl != null && !bucketUrl.isEmpty()) {
+                S3Client s3 = b2ClientFactory.createClient();
+
+                String path = bucketUrl.substring(bucketUrl.indexOf(".com/") + 5);
+                int firstSlash = path.indexOf('/');
+                String key = path.substring(firstSlash + 1);
+
+                DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .versionId(policyDocumentOpt.get().getVersionId())
+                        .build();
+
+                DeleteObjectResponse deleteResponse = s3.deleteObject(deleteRequest);
+                logger.info("Delete response: ======================>" + deleteResponse.toString());
+
+                if (deleteResponse.sdkHttpResponse().isSuccessful()) {
+                    policyDocumentRepository.delete(policyDocumentOpt.get());
+                } else {
+                    throw new Exception("Failed to delete the file from S3");
+                }
+            } else {
+                policyDocumentRepository.delete(policyDocumentOpt.get());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error deleting file from S3: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        return true;
+
     }
 
     public PolicyDocumentDto getPolicyDocument(HttpServletRequest request, Long id) throws Exception {

@@ -65,7 +65,7 @@ public class PolicyDocumentController {
         return ResponseEntity.ok(message);
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete-file")
     public ResponseEntity<?> deletePolicyDocument(HttpServletRequest request, @RequestParam Long id) {
         Message message = new Message();
 
@@ -77,7 +77,7 @@ public class PolicyDocumentController {
             return ResponseEntity.status(403).body(message);
         }
         message.setName("Success");
-        message.setMessage("Policy document deleted successfully");
+        message.setMessage("Policy file deleted successfully");
         return ResponseEntity.ok(message);
     }
 
